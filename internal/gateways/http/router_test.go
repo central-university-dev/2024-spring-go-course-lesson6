@@ -409,7 +409,7 @@ func TestSensorsRoutes(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				w := httptest.NewRecorder()
-				req, _ := http.NewRequest(tt.input, "/users", nil)
+				req, _ := http.NewRequest(tt.input, "/sensors", nil)
 				router.ServeHTTP(w, req)
 
 				assert.Equal(t, tt.want, w.Code, "Получили в ответ не тот код")
