@@ -44,11 +44,11 @@ func TestUnknownRoute(t *testing.T) {
 		want  int
 	}{
 		{http.MethodGet, http.MethodGet, http.StatusNotFound},
-		{"POST", "POST", http.StatusNotFound},
+		{http.MethodPost, http.MethodPost, http.StatusNotFound},
 		{http.MethodPut, http.MethodPut, http.StatusNotFound},
 		{http.MethodDelete, http.MethodDelete, http.StatusNotFound},
 		{http.MethodHead, http.MethodHead, http.StatusNotFound},
-		{"OPTIONS", "OPTIONS", http.StatusNotFound},
+		{http.MethodOptions, http.MethodOptions, http.StatusNotFound},
 		{http.MethodPatch, http.MethodPatch, http.StatusNotFound},
 		{http.MethodConnect, http.MethodConnect, http.StatusNotFound},
 		{http.MethodTrace, http.MethodTrace, http.StatusNotFound},
@@ -73,7 +73,7 @@ func TestUsersRoutes(t *testing.T) {
 			body := `{
 				"name": "Пользователь 1"
 			}`
-			req, _ := http.NewRequest("POST", "/users", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -88,7 +88,7 @@ func TestUsersRoutes(t *testing.T) {
 				<Id>1</Id>
 				<Name>Пользователь 1</Name>
 			</User>`
-			req, _ := http.NewRequest("POST", "/users", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -99,7 +99,7 @@ func TestUsersRoutes(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			body := `{ невалидный json }`
-			req, _ := http.NewRequest("POST", "/users", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -113,7 +113,7 @@ func TestUsersRoutes(t *testing.T) {
 				"id": -1,
 				"name": "Пользователь -1"
 			}`
-			req, _ := http.NewRequest("POST", "/users", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -123,13 +123,13 @@ func TestUsersRoutes(t *testing.T) {
 
 	t.Run("OPTIONS_users_204", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("OPTIONS", "/users", nil)
+		req, _ := http.NewRequest(http.MethodOptions, "/users", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
-		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
-		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
+		assert.Contains(t, allowed, http.MethodOptions, "В разрешённых методах нет OPTIONS")
+		assert.Contains(t, allowed, http.MethodPost, "В разрешённых методах нет POST")
 	})
 
 	// Другие методы не поддерживаем.
@@ -155,8 +155,8 @@ func TestUsersRoutes(t *testing.T) {
 
 				assert.Equal(t, tt.want, w.Code, "Получили в ответ не тот код")
 				allowed := strings.Split(w.Header().Get("Allow"), ",")
-				assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
-				assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
+				assert.Contains(t, allowed, http.MethodOptions, "В разрешённых методах нет OPTIONS")
+				assert.Contains(t, allowed, http.MethodPost, "В разрешённых методах нет POST")
 			})
 		}
 	})
@@ -220,7 +220,7 @@ func TestSensorsRoutes(t *testing.T) {
 				"description": "Датчик температуры",
 				"is_active": true,
 			}`
-			req, _ := http.NewRequest("POST", "/sensors", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -241,7 +241,7 @@ func TestSensorsRoutes(t *testing.T) {
 				<RegisteredAt>2018-01-01T00:00:00Z</RegisteredAt>
 				<LastActivity>2018-01-01T00:00:00Z</LastActivity>
 			</Sensor>`
-			req, _ := http.NewRequest("POST", "/sensors", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -252,7 +252,7 @@ func TestSensorsRoutes(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			body := `{ невалидный json }`
-			req, _ := http.NewRequest("POST", "/sensors", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -272,7 +272,7 @@ func TestSensorsRoutes(t *testing.T) {
 				"registered_at": "2018-01-01T00:00:00Z",
 				"last_activity": "2018-01-01T00:00:00Z"
 			}`
-			req, _ := http.NewRequest("POST", "/sensors", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -282,13 +282,13 @@ func TestSensorsRoutes(t *testing.T) {
 
 	t.Run("OPTIONS_sensors_204", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("OPTIONS", "/sensors", nil)
+		req, _ := http.NewRequest(http.MethodOptions, "/sensors", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
-		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
-		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
+		assert.Contains(t, allowed, http.MethodOptions, "В разрешённых методах нет OPTIONS")
+		assert.Contains(t, allowed, http.MethodPost, "В разрешённых методах нет POST")
 		assert.Contains(t, allowed, http.MethodGet, "В разрешённых методах нет GET")
 		assert.Contains(t, allowed, http.MethodHead, "В разрешённых методах нет HEAD")
 	})
@@ -381,12 +381,12 @@ func TestSensorsRoutes(t *testing.T) {
 
 	t.Run("OPTIONS_sensors_sensor_id_204", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("OPTIONS", "/sensors/1", nil)
+		req, _ := http.NewRequest(http.MethodOptions, "/sensors/1", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
-		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
+		assert.Contains(t, allowed, http.MethodOptions, "В разрешённых методах нет OPTIONS")
 		assert.Contains(t, allowed, http.MethodGet, "В разрешённых методах нет GET")
 		assert.Contains(t, allowed, http.MethodHead, "В разрешённых методах нет HEAD")
 	})
@@ -414,8 +414,8 @@ func TestSensorsRoutes(t *testing.T) {
 
 				assert.Equal(t, tt.want, w.Code, "Получили в ответ не тот код")
 				allowed := strings.Split(w.Header().Get("Allow"), ",")
-				assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
-				assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
+				assert.Contains(t, allowed, http.MethodOptions, "В разрешённых методах нет OPTIONS")
+				assert.Contains(t, allowed, http.MethodPost, "В разрешённых методах нет POST")
 			})
 		}
 	})
@@ -516,7 +516,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			body := `{
 				"sensor_id": 1,
 			}`
-			req, _ := http.NewRequest("POST", "/users/1/sensors", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/users/1/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -529,7 +529,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			body := `<SensorToUserBinding>
 				<SensorId>1</SensorId>
 			</SensorToUserBinding>`
-			req, _ := http.NewRequest("POST", "/users/1/sensors", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/users/1/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -540,7 +540,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			body := `{ невалидный json }`
-			req, _ := http.NewRequest("POST", "/users/1/sensors", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/users/1/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -553,7 +553,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			body := `{
 				"sensor_id": 1,
 			}`
-			req, _ := http.NewRequest("POST", "/users/2/sensors", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/users/2/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -566,7 +566,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			body := `{
 				"sensor_id": -1,
 			}`
-			req, _ := http.NewRequest("POST", "/users/1/sensors", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/users/1/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -576,13 +576,13 @@ func TestUsersSensorsRoutes(t *testing.T) {
 
 	t.Run("OPTIONS_users_user_id_sensors_204", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("OPTIONS", "/users/1/sensors", nil)
+		req, _ := http.NewRequest(http.MethodOptions, "/users/1/sensors", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
-		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
-		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
+		assert.Contains(t, allowed, http.MethodOptions, "В разрешённых методах нет OPTIONS")
+		assert.Contains(t, allowed, http.MethodPost, "В разрешённых методах нет POST")
 		assert.Contains(t, allowed, http.MethodHead, "В разрешённых методах нет HEAD")
 		assert.Contains(t, allowed, http.MethodGet, "В разрешённых методах нет GET")
 	})
@@ -608,8 +608,8 @@ func TestUsersSensorsRoutes(t *testing.T) {
 
 				assert.Equal(t, tt.want, w.Code, "Получили в ответ не тот код")
 				allowed := strings.Split(w.Header().Get("Allow"), ",")
-				assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
-				assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
+				assert.Contains(t, allowed, http.MethodOptions, "В разрешённых методах нет OPTIONS")
+				assert.Contains(t, allowed, http.MethodPost, "В разрешённых методах нет POST")
 				assert.Contains(t, allowed, http.MethodHead, "В разрешённых методах нет HEAD")
 				assert.Contains(t, allowed, http.MethodGet, "В разрешённых методах нет GET")
 			})
@@ -629,7 +629,7 @@ func TestEventsRoutes(t *testing.T) {
 				"timestamp": "2024-04-08T11:24:29.747Z",
 				"payload": 10
 			}`
-			req, _ := http.NewRequest("POST", "/events", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/events", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -645,7 +645,7 @@ func TestEventsRoutes(t *testing.T) {
 				<Timestamp>2024-04-08T11:24:29.747Z</Timestamp>
 				<Payload>10</Payload>
 			</SensorEvent>`
-			req, _ := http.NewRequest("POST", "/events", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/events", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -656,7 +656,7 @@ func TestEventsRoutes(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			body := `{ невалидный json }`
-			req, _ := http.NewRequest("POST", "/events", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/events", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -672,7 +672,7 @@ func TestEventsRoutes(t *testing.T) {
 				"timestamp": "2024-04-08T11:24:29.747Z",
 				"payload": 10
 			}`
-			req, _ := http.NewRequest("POST", "/events", bytes.NewReader([]byte(body)))
+			req, _ := http.NewRequest(http.MethodPost, "/events", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -682,13 +682,13 @@ func TestEventsRoutes(t *testing.T) {
 
 	t.Run("OPTIONS_events_204", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("OPTIONS", "/events", nil)
+		req, _ := http.NewRequest(http.MethodOptions, "/events", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
-		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
-		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
+		assert.Contains(t, allowed, http.MethodOptions, "В разрешённых методах нет OPTIONS")
+		assert.Contains(t, allowed, http.MethodPost, "В разрешённых методах нет POST")
 	})
 
 	// Другие методы не поддерживаем.
@@ -714,8 +714,8 @@ func TestEventsRoutes(t *testing.T) {
 
 				assert.Equal(t, tt.want, w.Code, "Получили в ответ не тот код")
 				allowed := strings.Split(w.Header().Get("Allow"), ",")
-				assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
-				assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
+				assert.Contains(t, allowed, http.MethodOptions, "В разрешённых методах нет OPTIONS")
+				assert.Contains(t, allowed, http.MethodPost, "В разрешённых методах нет POST")
 			})
 		}
 	})
