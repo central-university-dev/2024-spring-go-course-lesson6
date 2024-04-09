@@ -43,20 +43,20 @@ func TestUnknownRoute(t *testing.T) {
 		input string
 		want  int
 	}{
-		{"GET", "GET", http.StatusNotFound},
+		{http.MethodGet, http.MethodGet, http.StatusNotFound},
 		{"POST", "POST", http.StatusNotFound},
-		{"PUT", "PUT", http.StatusNotFound},
-		{"DELETE", "DELETE", http.StatusNotFound},
-		{"HEAD", "HEAD", http.StatusNotFound},
+		{http.MethodPut, http.MethodPut, http.StatusNotFound},
+		{http.MethodDelete, http.MethodDelete, http.StatusNotFound},
+		{http.MethodHead, http.MethodHead, http.StatusNotFound},
 		{"OPTIONS", "OPTIONS", http.StatusNotFound},
-		{"PATCH", "PATCH", http.StatusNotFound},
-		{"CONNECT", "CONNECT", http.StatusNotFound},
-		{"TRACE", "TRACE", http.StatusNotFound},
+		{http.MethodPatch, http.MethodPatch, http.StatusNotFound},
+		{http.MethodConnect, http.MethodConnect, http.StatusNotFound},
+		{http.MethodTrace, http.MethodTrace, http.StatusNotFound},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/unknown", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/unknown", nil)
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.want, w.Code, "Получили в ответ не тот код")
@@ -139,13 +139,13 @@ func TestUsersRoutes(t *testing.T) {
 			input string
 			want  int
 		}{
-			{"GET", "GET", http.StatusMethodNotAllowed},
-			{"PUT", "PUT", http.StatusMethodNotAllowed},
-			{"DELETE", "DELETE", http.StatusMethodNotAllowed},
-			{"HEAD", "HEAD", http.StatusMethodNotAllowed},
-			{"PATCH", "PATCH", http.StatusMethodNotAllowed},
-			{"CONNECT", "CONNECT", http.StatusMethodNotAllowed},
-			{"TRACE", "TRACE", http.StatusMethodNotAllowed},
+			{http.MethodGet, http.MethodGet, http.StatusMethodNotAllowed},
+			{http.MethodPut, http.MethodPut, http.StatusMethodNotAllowed},
+			{http.MethodPut, http.MethodPut, http.StatusMethodNotAllowed},
+			{http.MethodHead, http.MethodHead, http.StatusMethodNotAllowed},
+			{http.MethodPatch, http.MethodPatch, http.StatusMethodNotAllowed},
+			{http.MethodConnect, http.MethodConnect, http.StatusMethodNotAllowed},
+			{http.MethodTrace, http.MethodTrace, http.StatusMethodNotAllowed},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -168,7 +168,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("success_200", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/sensors", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/sensors", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -179,7 +179,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/sensors", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/sensors", nil)
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -191,7 +191,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("success_200", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/sensors", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/sensors", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -202,7 +202,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/sensors", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/sensors", nil)
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -289,15 +289,15 @@ func TestSensorsRoutes(t *testing.T) {
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
 		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
 		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
-		assert.Contains(t, allowed, "GET", "В разрешённых методах нет GET")
-		assert.Contains(t, allowed, "HEAD", "В разрешённых методах нет HEAD")
+		assert.Contains(t, allowed, http.MethodGet, "В разрешённых методах нет GET")
+		assert.Contains(t, allowed, http.MethodHead, "В разрешённых методах нет HEAD")
 	})
 
 	t.Run("GET_sensors_sensor_id", func(t *testing.T) {
 		t.Run("sensor_exists_200", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/sensors/1", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/sensors/1", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -308,7 +308,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("id_has_invalid_format_422", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/sensors/1", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/sensors/1", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -318,7 +318,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/sensors/1", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/sensors/1", nil)
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -328,7 +328,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("sensor_doesnt_exist_404", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/sensors/2", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/sensors/2", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -340,7 +340,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("sensor_exists_200", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/sensors/1", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/sensors/1", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -351,7 +351,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("id_has_invalid_format_422", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/sensors/1", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/sensors/1", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -361,7 +361,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/sensors/1", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/sensors/1", nil)
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -371,7 +371,7 @@ func TestSensorsRoutes(t *testing.T) {
 		t.Run("sensor_doesnt_exist_404", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/sensors/2", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/sensors/2", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -387,8 +387,8 @@ func TestSensorsRoutes(t *testing.T) {
 		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
 		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
-		assert.Contains(t, allowed, "GET", "В разрешённых методах нет GET")
-		assert.Contains(t, allowed, "HEAD", "В разрешённых методах нет HEAD")
+		assert.Contains(t, allowed, http.MethodGet, "В разрешённых методах нет GET")
+		assert.Contains(t, allowed, http.MethodHead, "В разрешённых методах нет HEAD")
 	})
 
 	// Другие методы не поддерживаем.
@@ -398,13 +398,13 @@ func TestSensorsRoutes(t *testing.T) {
 			input string
 			want  int
 		}{
-			{"GET", "GET", http.StatusMethodNotAllowed},
-			{"PUT", "PUT", http.StatusMethodNotAllowed},
-			{"DELETE", "DELETE", http.StatusMethodNotAllowed},
-			{"HEAD", "HEAD", http.StatusMethodNotAllowed},
-			{"PATCH", "PATCH", http.StatusMethodNotAllowed},
-			{"CONNECT", "CONNECT", http.StatusMethodNotAllowed},
-			{"TRACE", "TRACE", http.StatusMethodNotAllowed},
+			{http.MethodGet, http.MethodGet, http.StatusMethodNotAllowed},
+			{http.MethodPut, http.MethodPut, http.StatusMethodNotAllowed},
+			{http.MethodDelete, http.MethodDelete, http.StatusMethodNotAllowed},
+			{http.MethodHead, http.MethodHead, http.StatusMethodNotAllowed},
+			{http.MethodPatch, http.MethodPatch, http.StatusMethodNotAllowed},
+			{http.MethodConnect, http.MethodConnect, http.StatusMethodNotAllowed},
+			{http.MethodTrace, http.MethodTrace, http.StatusMethodNotAllowed},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -427,7 +427,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		t.Run("user_exists_200", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/users/1/sensors", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/users/1/sensors", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -438,7 +438,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		t.Run("id_has_invalid_format_422", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/users/abc/sensors", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/users/abc/sensors", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -448,7 +448,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/users/1/sensors", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/users/1/sensors", nil)
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -458,7 +458,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		t.Run("user_doesnt_exist_404", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("GET", "/users/2/sensors", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/users/2/sensors", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -470,7 +470,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		t.Run("user_exists_200", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/users/1/sensors", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/users/1/sensors", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -481,7 +481,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		t.Run("id_has_invalid_format_422", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/users/abc/sensors", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/users/abc/sensors", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -491,7 +491,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/users/1/sensors", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/users/1/sensors", nil)
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
@@ -501,7 +501,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		t.Run("user_doesnt_exist_404", func(t *testing.T) {
 			w := httptest.NewRecorder()
 
-			req, _ := http.NewRequest("HEAD", "/users/2/sensors", nil)
+			req, _ := http.NewRequest(http.MethodHead, "/users/2/sensors", nil)
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
@@ -583,8 +583,8 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
 		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
 		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
-		assert.Contains(t, allowed, "HEAD", "В разрешённых методах нет HEAD")
-		assert.Contains(t, allowed, "GET", "В разрешённых методах нет GET")
+		assert.Contains(t, allowed, http.MethodHead, "В разрешённых методах нет HEAD")
+		assert.Contains(t, allowed, http.MethodGet, "В разрешённых методах нет GET")
 	})
 
 	// Другие методы не поддерживаем.
@@ -594,11 +594,11 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			input string
 			want  int
 		}{
-			{"PUT", "PUT", http.StatusMethodNotAllowed},
-			{"DELETE", "DELETE", http.StatusMethodNotAllowed},
-			{"PATCH", "PATCH", http.StatusMethodNotAllowed},
-			{"CONNECT", "CONNECT", http.StatusMethodNotAllowed},
-			{"TRACE", "TRACE", http.StatusMethodNotAllowed},
+			{http.MethodPut, http.MethodPut, http.StatusMethodNotAllowed},
+			{http.MethodDelete, http.MethodDelete, http.StatusMethodNotAllowed},
+			{http.MethodPatch, http.MethodPatch, http.StatusMethodNotAllowed},
+			{http.MethodConnect, http.MethodConnect, http.StatusMethodNotAllowed},
+			{http.MethodTrace, http.MethodTrace, http.StatusMethodNotAllowed},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -610,8 +610,8 @@ func TestUsersSensorsRoutes(t *testing.T) {
 				allowed := strings.Split(w.Header().Get("Allow"), ",")
 				assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
 				assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
-				assert.Contains(t, allowed, "HEAD", "В разрешённых методах нет HEAD")
-				assert.Contains(t, allowed, "GET", "В разрешённых методах нет GET")
+				assert.Contains(t, allowed, http.MethodHead, "В разрешённых методах нет HEAD")
+				assert.Contains(t, allowed, http.MethodGet, "В разрешённых методах нет GET")
 			})
 		}
 	})
@@ -698,13 +698,13 @@ func TestEventsRoutes(t *testing.T) {
 			input string
 			want  int
 		}{
-			{"GET", "GET", http.StatusMethodNotAllowed},
-			{"PUT", "PUT", http.StatusMethodNotAllowed},
-			{"DELETE", "DELETE", http.StatusMethodNotAllowed},
-			{"HEAD", "HEAD", http.StatusMethodNotAllowed},
-			{"PATCH", "PATCH", http.StatusMethodNotAllowed},
-			{"CONNECT", "CONNECT", http.StatusMethodNotAllowed},
-			{"TRACE", "TRACE", http.StatusMethodNotAllowed},
+			{http.MethodGet, http.MethodGet, http.StatusMethodNotAllowed},
+			{http.MethodPut, http.MethodPut, http.StatusMethodNotAllowed},
+			{http.MethodDelete, http.MethodDelete, http.StatusMethodNotAllowed},
+			{http.MethodHead, http.MethodHead, http.StatusMethodNotAllowed},
+			{http.MethodPatch, http.MethodPatch, http.StatusMethodNotAllowed},
+			{http.MethodConnect, http.MethodConnect, http.StatusMethodNotAllowed},
+			{http.MethodTrace, http.MethodTrace, http.StatusMethodNotAllowed},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
