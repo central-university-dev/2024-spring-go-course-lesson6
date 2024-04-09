@@ -126,7 +126,7 @@ func TestUsersRoutes(t *testing.T) {
 		req, _ := http.NewRequest("OPTIONS", "/users", nil)
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, 204, w.Code, "Получили в ответ не тот код")
+		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
 		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
 		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
@@ -139,13 +139,13 @@ func TestUsersRoutes(t *testing.T) {
 			input string
 			want  int
 		}{
-			{"GET", "GET", 405},
-			{"PUT", "PUT", 405},
-			{"DELETE", "DELETE", 405},
-			{"HEAD", "HEAD", 405},
-			{"PATCH", "PATCH", 405},
-			{"CONNECT", "CONNECT", 405},
-			{"TRACE", "TRACE", 405},
+			{"GET", "GET", http.StatusMethodNotAllowed},
+			{"PUT", "PUT", http.StatusMethodNotAllowed},
+			{"DELETE", "DELETE", http.StatusMethodNotAllowed},
+			{"HEAD", "HEAD", http.StatusMethodNotAllowed},
+			{"PATCH", "PATCH", http.StatusMethodNotAllowed},
+			{"CONNECT", "CONNECT", http.StatusMethodNotAllowed},
+			{"TRACE", "TRACE", http.StatusMethodNotAllowed},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -172,7 +172,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 200, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusOK, w.Code, "Получили в ответ не тот код")
 			assert.True(t, json.Valid(w.Body.Bytes()), "В ответе не json")
 		})
 
@@ -183,7 +183,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 406, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusNotAcceptable, w.Code, "Получили в ответ не тот код")
 		})
 	})
 
@@ -195,7 +195,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 200, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusOK, w.Code, "Получили в ответ не тот код")
 			assert.NotEmpty(t, w.Header().Get("Content-Length"), "Content-Length не задан")
 		})
 
@@ -206,7 +206,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 406, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusNotAcceptable, w.Code, "Получили в ответ не тот код")
 		})
 	})
 
@@ -245,7 +245,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/xml")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 415, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnsupportedMediaType, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("request_body_has_syntax_error_400", func(t *testing.T) {
@@ -256,7 +256,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 400, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusBadRequest, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("request_body_is_valid_but_it_has_invalid_data_422", func(t *testing.T) {
@@ -276,7 +276,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 422, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Получили в ответ не тот код")
 		})
 	})
 
@@ -285,7 +285,7 @@ func TestSensorsRoutes(t *testing.T) {
 		req, _ := http.NewRequest("OPTIONS", "/sensors", nil)
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, 204, w.Code, "Получили в ответ не тот код")
+		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
 		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
 		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
@@ -301,7 +301,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 200, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusOK, w.Code, "Получили в ответ не тот код")
 			assert.True(t, json.Valid(w.Body.Bytes()), "В ответе не json")
 		})
 
@@ -312,7 +312,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 422, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
@@ -322,7 +322,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 406, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusNotAcceptable, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("sensor_doesnt_exist_404", func(t *testing.T) {
@@ -344,7 +344,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 200, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusOK, w.Code, "Получили в ответ не тот код")
 			assert.NotEmpty(t, w.Header().Get("Content-Length"), "Content-Length не задан")
 		})
 
@@ -355,7 +355,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 422, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
@@ -365,7 +365,7 @@ func TestSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 406, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusNotAcceptable, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("sensor_doesnt_exist_404", func(t *testing.T) {
@@ -384,7 +384,7 @@ func TestSensorsRoutes(t *testing.T) {
 		req, _ := http.NewRequest("OPTIONS", "/sensors/1", nil)
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, 204, w.Code, "Получили в ответ не тот код")
+		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
 		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
 		assert.Contains(t, allowed, "GET", "В разрешённых методах нет GET")
@@ -398,13 +398,13 @@ func TestSensorsRoutes(t *testing.T) {
 			input string
 			want  int
 		}{
-			{"GET", "GET", 405},
-			{"PUT", "PUT", 405},
-			{"DELETE", "DELETE", 405},
-			{"HEAD", "HEAD", 405},
-			{"PATCH", "PATCH", 405},
-			{"CONNECT", "CONNECT", 405},
-			{"TRACE", "TRACE", 405},
+			{"GET", "GET", http.StatusMethodNotAllowed},
+			{"PUT", "PUT", http.StatusMethodNotAllowed},
+			{"DELETE", "DELETE", http.StatusMethodNotAllowed},
+			{"HEAD", "HEAD", http.StatusMethodNotAllowed},
+			{"PATCH", "PATCH", http.StatusMethodNotAllowed},
+			{"CONNECT", "CONNECT", http.StatusMethodNotAllowed},
+			{"TRACE", "TRACE", http.StatusMethodNotAllowed},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -431,7 +431,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 200, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusOK, w.Code, "Получили в ответ не тот код")
 			assert.True(t, json.Valid(w.Body.Bytes()), "В ответе не json")
 		})
 
@@ -442,7 +442,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 422, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
@@ -452,7 +452,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 406, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusNotAcceptable, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("user_doesnt_exist_404", func(t *testing.T) {
@@ -474,7 +474,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 200, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusOK, w.Code, "Получили в ответ не тот код")
 			assert.NotEmpty(t, w.Header().Get("Content-Length"), "Content-Length не задан")
 		})
 
@@ -485,7 +485,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 422, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
@@ -495,7 +495,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Accept", "application/xml")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 406, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusNotAcceptable, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("user_doesnt_exist_404", func(t *testing.T) {
@@ -520,7 +520,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 201, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusCreated, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("request_body_has_unsupported_format_415", func(t *testing.T) {
@@ -533,7 +533,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/xml")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 415, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnsupportedMediaType, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("invalid_request_body_400", func(t *testing.T) {
@@ -544,7 +544,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 400, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusBadRequest, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("valid_request_body_but_user_doesnt_exist_404", func(t *testing.T) {
@@ -570,7 +570,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 422, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Получили в ответ не тот код")
 		})
 	})
 
@@ -579,7 +579,7 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		req, _ := http.NewRequest("OPTIONS", "/users/1/sensors", nil)
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, 204, w.Code, "Получили в ответ не тот код")
+		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
 		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
 		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
@@ -594,11 +594,11 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			input string
 			want  int
 		}{
-			{"PUT", "PUT", 405},
-			{"DELETE", "DELETE", 405},
-			{"PATCH", "PATCH", 405},
-			{"CONNECT", "CONNECT", 405},
-			{"TRACE", "TRACE", 405},
+			{"PUT", "PUT", http.StatusMethodNotAllowed},
+			{"DELETE", "DELETE", http.StatusMethodNotAllowed},
+			{"PATCH", "PATCH", http.StatusMethodNotAllowed},
+			{"CONNECT", "CONNECT", http.StatusMethodNotAllowed},
+			{"TRACE", "TRACE", http.StatusMethodNotAllowed},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -633,7 +633,7 @@ func TestEventsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 201, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusCreated, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("request_body_has_unsupported_format_415", func(t *testing.T) {
@@ -649,7 +649,7 @@ func TestEventsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/xml")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 415, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnsupportedMediaType, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("request_body_has_syntax_error_400", func(t *testing.T) {
@@ -660,7 +660,7 @@ func TestEventsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 400, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusBadRequest, w.Code, "Получили в ответ не тот код")
 		})
 
 		t.Run("request_body_is_valid_but_it_has_invalid_data_422", func(t *testing.T) {
@@ -676,7 +676,7 @@ func TestEventsRoutes(t *testing.T) {
 			req.Header.Add("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, 422, w.Code, "Получили в ответ не тот код")
+			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Получили в ответ не тот код")
 		})
 	})
 
@@ -685,7 +685,7 @@ func TestEventsRoutes(t *testing.T) {
 		req, _ := http.NewRequest("OPTIONS", "/events", nil)
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, 204, w.Code, "Получили в ответ не тот код")
+		assert.Equal(t, http.StatusNoContent, w.Code, "Получили в ответ не тот код")
 		allowed := strings.Split(w.Header().Get("Allow"), ",")
 		assert.Contains(t, allowed, "OPTIONS", "В разрешённых методах нет OPTIONS")
 		assert.Contains(t, allowed, "POST", "В разрешённых методах нет POST")
@@ -698,13 +698,13 @@ func TestEventsRoutes(t *testing.T) {
 			input string
 			want  int
 		}{
-			{"GET", "GET", 405},
-			{"PUT", "PUT", 405},
-			{"DELETE", "DELETE", 405},
-			{"HEAD", "HEAD", 405},
-			{"PATCH", "PATCH", 405},
-			{"CONNECT", "CONNECT", 405},
-			{"TRACE", "TRACE", 405},
+			{"GET", "GET", http.StatusMethodNotAllowed},
+			{"PUT", "PUT", http.StatusMethodNotAllowed},
+			{"DELETE", "DELETE", http.StatusMethodNotAllowed},
+			{"HEAD", "HEAD", http.StatusMethodNotAllowed},
+			{"PATCH", "PATCH", http.StatusMethodNotAllowed},
+			{"CONNECT", "CONNECT", http.StatusMethodNotAllowed},
+			{"TRACE", "TRACE", http.StatusMethodNotAllowed},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
