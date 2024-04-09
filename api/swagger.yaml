@@ -226,10 +226,6 @@ paths:
             $ref: "#/definitions/User"
         '400':
           description: Тело запроса синтексически навалидно
-        '401':
-          description: Запрос без авторизации
-        '403':
-          description: Неверные данные авторизации
         '415':
           description: Тело запроса в не поддерживаемом формате
         '422':
@@ -345,10 +341,6 @@ paths:
           description: Успех
         '400':
           description: Тело запроса синтексически навалидно
-        '401':
-          description: Запрос без авторизации
-        '403':
-          description: Неверные данные авторизации
         '404':
           description: Нет пользователя с таким идентификатором
         '415':
@@ -447,7 +439,7 @@ definitions:
         - cc
         - adc
       current_state:
-        description: Код текущего состояния
+        description: Состояние датчика, соответствует значению в payload последнего обработанного события.
         type: integer
         format: int64
       description:
