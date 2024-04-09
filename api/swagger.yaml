@@ -121,7 +121,7 @@ paths:
             type: object
             $ref: "#/definitions/Sensor"
         '400':
-          description: Тело запроса синтексически навалидно
+          description: Тело запроса синтаксически невалидно
         '415':
           description: Тело запроса в неподдерживаемом формате
         '422':
