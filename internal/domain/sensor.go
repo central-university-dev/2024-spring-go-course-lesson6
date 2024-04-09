@@ -1,6 +1,14 @@
 package domain
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+var (
+	ErrWrongSensorType         = errors.New("wrong sensor type")
+	ErrWrongSensorSerialNumber = errors.New("wrong sensor serial number")
+)
 
 type SensorType string
 
@@ -19,4 +27,13 @@ type Sensor struct {
 	IsActive     bool
 	RegisteredAt time.Time
 	LastActivity time.Time
+}
+
+func (s *Sensor) Validate() error {
+	if s.Type != SensorTypeContactClosure && s.Type != SensorTypeADC {
+		return ErrWrongSensorType
+	} else if len(s.SerialNumber) != 10 {
+		return ErrWrongSensorSerialNumber
+	}
+	return nil
 }
