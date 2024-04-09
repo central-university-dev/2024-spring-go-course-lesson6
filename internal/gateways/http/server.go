@@ -3,6 +3,8 @@ package http
 import (
 	"strconv"
 
+	"homework/internal/usecase"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,10 +14,15 @@ type Server struct {
 	router *gin.Engine
 }
 
-// TODO реализовать web-сервис согласно заданию
-func NewServer(options ...func(*Server)) *Server {
+type UseCases struct {
+	Event  *usecase.Event
+	Sensor *usecase.Sensor
+	User   *usecase.User
+}
+
+func NewServer(useCases UseCases, options ...func(*Server)) *Server {
 	r := gin.Default()
-	setupRouter(r)
+	setupRouter(r, useCases)
 
 	s := &Server{router: r, host: "localhost", port: 8080}
 	for _, o := range options {

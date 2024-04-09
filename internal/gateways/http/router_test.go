@@ -10,7 +10,31 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+
+	eventRepository "homework/internal/repository/event/inmemory"
+	sensorRepository "homework/internal/repository/sensor/inmemory"
+	userRepository "homework/internal/repository/user/inmemory"
+	"homework/internal/usecase"
 )
+
+var (
+	er  = eventRepository.NewEventRepository()
+	sr  = sensorRepository.NewSensorRepository()
+	ur  = userRepository.NewUserRepository()
+	sor = userRepository.NewSensorOwnerRepository()
+)
+
+var useCases = UseCases{
+	Event:  usecase.NewEvent(er, sr),
+	Sensor: usecase.NewSensor(sr),
+	User:   usecase.NewUser(ur, sor, sr),
+}
+
+var router = gin.Default()
+
+func init() {
+	setupRouter(router, useCases)
+}
 
 // Все неизвестные пути должны возвращать http.StatusNotFound.
 func TestUnknownRoute(t *testing.T) {
@@ -31,9 +55,6 @@ func TestUnknownRoute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", "/unknown", nil)
 			router.ServeHTTP(w, req)
@@ -47,9 +68,6 @@ func TestUnknownRoute(t *testing.T) {
 func TestUsersRoutes(t *testing.T) {
 	t.Run("POST_users", func(t *testing.T) {
 		t.Run("valid_request_200", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{
@@ -64,9 +82,6 @@ func TestUsersRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_has_unsupported_format_415", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `<User>
@@ -81,9 +96,6 @@ func TestUsersRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_has_syntax_error_400", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{ невалидный json }`
@@ -95,9 +107,6 @@ func TestUsersRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_is_valid_but_it_has_invalid_data_422", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{
@@ -113,9 +122,6 @@ func TestUsersRoutes(t *testing.T) {
 	})
 
 	t.Run("OPTIONS_users_204", func(t *testing.T) {
-		router := gin.Default()
-		setupRouter(router)
-
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("OPTIONS", "/users", nil)
 		router.ServeHTTP(w, req)
@@ -143,9 +149,6 @@ func TestUsersRoutes(t *testing.T) {
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				router := gin.Default()
-				setupRouter(router)
-
 				w := httptest.NewRecorder()
 				req, _ := http.NewRequest(tt.input, "/users", nil)
 				router.ServeHTTP(w, req)
@@ -163,9 +166,6 @@ func TestUsersRoutes(t *testing.T) {
 func TestSensorsRoutes(t *testing.T) {
 	t.Run("GET_sensors", func(t *testing.T) {
 		t.Run("success_200", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/sensors", nil)
@@ -177,9 +177,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/sensors", nil)
@@ -192,9 +189,6 @@ func TestSensorsRoutes(t *testing.T) {
 
 	t.Run("HEAD_sensors", func(t *testing.T) {
 		t.Run("success_200", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/sensors", nil)
@@ -206,9 +200,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/sensors", nil)
@@ -221,9 +212,6 @@ func TestSensorsRoutes(t *testing.T) {
 
 	t.Run("POST_sensors", func(t *testing.T) {
 		t.Run("valid_request_200", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{
@@ -241,9 +229,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_has_unsupported_format_415", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `<Sensor>
@@ -264,9 +249,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_has_syntax_error_400", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{ невалидный json }`
@@ -278,9 +260,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_is_valid_but_it_has_invalid_data_422", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{
@@ -302,9 +281,6 @@ func TestSensorsRoutes(t *testing.T) {
 	})
 
 	t.Run("OPTIONS_sensors_204", func(t *testing.T) {
-		router := gin.Default()
-		setupRouter(router)
-
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("OPTIONS", "/sensors", nil)
 		router.ServeHTTP(w, req)
@@ -319,9 +295,6 @@ func TestSensorsRoutes(t *testing.T) {
 
 	t.Run("GET_sensors_sensor_id", func(t *testing.T) {
 		t.Run("sensor_exists_200", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/sensors/1", nil)
@@ -333,9 +306,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("id_has_invalid_format_422", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/sensors/1", nil)
@@ -346,9 +316,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/sensors/1", nil)
@@ -359,9 +326,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("sensor_doesnt_exist_404", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/sensors/2", nil)
@@ -374,9 +338,6 @@ func TestSensorsRoutes(t *testing.T) {
 
 	t.Run("HEAD_sensors_sensor_id", func(t *testing.T) {
 		t.Run("sensor_exists_200", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/sensors/1", nil)
@@ -388,9 +349,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("id_has_invalid_format_422", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/sensors/1", nil)
@@ -401,9 +359,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/sensors/1", nil)
@@ -414,9 +369,6 @@ func TestSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("sensor_doesnt_exist_404", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/sensors/2", nil)
@@ -428,9 +380,6 @@ func TestSensorsRoutes(t *testing.T) {
 	})
 
 	t.Run("OPTIONS_sensors_sensor_id_204", func(t *testing.T) {
-		router := gin.Default()
-		setupRouter(router)
-
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("OPTIONS", "/sensors/1", nil)
 		router.ServeHTTP(w, req)
@@ -459,9 +408,6 @@ func TestSensorsRoutes(t *testing.T) {
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				router := gin.Default()
-				setupRouter(router)
-
 				w := httptest.NewRecorder()
 				req, _ := http.NewRequest(tt.input, "/users", nil)
 				router.ServeHTTP(w, req)
@@ -479,9 +425,6 @@ func TestSensorsRoutes(t *testing.T) {
 func TestUsersSensorsRoutes(t *testing.T) {
 	t.Run("GET_users_user_id_sensors", func(t *testing.T) {
 		t.Run("user_exists_200", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/users/1/sensors", nil)
@@ -493,9 +436,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("id_has_invalid_format_422", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/users/abc/sensors", nil)
@@ -506,9 +446,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/users/1/sensors", nil)
@@ -519,9 +456,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("user_doesnt_exist_404", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("GET", "/users/2/sensors", nil)
@@ -534,9 +468,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 
 	t.Run("HEAD_users_user_id_sensors", func(t *testing.T) {
 		t.Run("user_exists_200", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/users/1/sensors", nil)
@@ -548,9 +479,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("id_has_invalid_format_422", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/users/abc/sensors", nil)
@@ -561,9 +489,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("requested_unsupported_body_format_406", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/users/1/sensors", nil)
@@ -574,9 +499,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("user_doesnt_exist_404", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			req, _ := http.NewRequest("HEAD", "/users/2/sensors", nil)
@@ -589,9 +511,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 
 	t.Run("POST_users_user_id_sensors", func(t *testing.T) {
 		t.Run("valid_request_body_and_user_exists_200", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{
@@ -605,9 +524,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_has_unsupported_format_415", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `<SensorToUserBinding>
@@ -621,9 +537,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("invalid_request_body_400", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{ невалидный json }`
@@ -635,9 +548,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("valid_request_body_but_user_doesnt_exist_404", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{
@@ -651,9 +561,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_is_valid_but_it_has_invalid_data_422", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{
@@ -668,9 +575,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 	})
 
 	t.Run("OPTIONS_users_user_id_sensors_204", func(t *testing.T) {
-		router := gin.Default()
-		setupRouter(router)
-
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("OPTIONS", "/users/1/sensors", nil)
 		router.ServeHTTP(w, req)
@@ -698,9 +602,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				router := gin.Default()
-				setupRouter(router)
-
 				w := httptest.NewRecorder()
 				req, _ := http.NewRequest(tt.input, "/users", nil)
 				router.ServeHTTP(w, req)
@@ -720,9 +621,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 func TestEventsRoutes(t *testing.T) {
 	t.Run("POST_events", func(t *testing.T) {
 		t.Run("valid_request_201", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{
@@ -739,9 +637,6 @@ func TestEventsRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_has_unsupported_format_415", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `<SensorEvent>
@@ -758,9 +653,6 @@ func TestEventsRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_has_syntax_error_400", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{ невалидный json }`
@@ -772,9 +664,6 @@ func TestEventsRoutes(t *testing.T) {
 		})
 
 		t.Run("request_body_is_valid_but_it_has_invalid_data_422", func(t *testing.T) {
-			router := gin.Default()
-			setupRouter(router)
-
 			w := httptest.NewRecorder()
 
 			body := `{
@@ -792,9 +681,6 @@ func TestEventsRoutes(t *testing.T) {
 	})
 
 	t.Run("OPTIONS_events_204", func(t *testing.T) {
-		router := gin.Default()
-		setupRouter(router)
-
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("OPTIONS", "/events", nil)
 		router.ServeHTTP(w, req)
@@ -822,9 +708,6 @@ func TestEventsRoutes(t *testing.T) {
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				router := gin.Default()
-				setupRouter(router)
-
 				w := httptest.NewRecorder()
 				req, _ := http.NewRequest(tt.input, "/users", nil)
 				router.ServeHTTP(w, req)
