@@ -23,7 +23,7 @@ paths:
       parameters:
       - in: "body"
         name: "body"
-        description: "Событие, который надо зарегистрировать"
+        description: "Событие, которое надо зарегистрировать"
         required: true
         schema:
           $ref: "#/definitions/SensorEvent"
