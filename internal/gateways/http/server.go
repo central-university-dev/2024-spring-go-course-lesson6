@@ -17,7 +17,7 @@ func NewServer(options ...func(*Server)) *Server {
 	r := gin.Default()
 	setupRouter(r)
 
-	s := &Server{router: r}
+	s := &Server{router: r, host: "localhost", port: 8080}
 	for _, o := range options {
 		o(s)
 	}
