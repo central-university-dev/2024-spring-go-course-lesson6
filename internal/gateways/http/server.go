@@ -1,7 +1,7 @@
 package http
 
 import (
-	"strconv"
+	"fmt"
 
 	"homework/internal/usecase"
 
@@ -45,5 +45,5 @@ func WithPort(port uint16) func(*Server) {
 }
 
 func (s *Server) Run() error {
-	return s.router.Run(s.host + ":" + strconv.FormatUint(uint64(s.port), 10))
+	return s.router.Run(fmt.Sprintf("%s:%d", s.host, s.port))
 }
