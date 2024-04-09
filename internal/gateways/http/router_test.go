@@ -57,7 +57,6 @@ func TestUsersRoutes(t *testing.T) {
 			}`
 			req, _ := http.NewRequest("POST", "/users", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authorization", "Basic YWRtaW46UGFzc3cwcmQ=")
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusOK, w.Code, "Получили в ответ не тот код")
@@ -76,7 +75,6 @@ func TestUsersRoutes(t *testing.T) {
 			</User>`
 			req, _ := http.NewRequest("POST", "/users", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/xml")
-			req.Header.Add("Authorization", "Basic YWRtaW46UGFzc3cwcmQ=")
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusUnsupportedMediaType, w.Code, "Получили в ответ не тот код")
@@ -91,7 +89,6 @@ func TestUsersRoutes(t *testing.T) {
 			body := `{ невалидный json }`
 			req, _ := http.NewRequest("POST", "/users", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authorization", "Basic YWRtaW46UGFzc3cwcmQ=")
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusBadRequest, w.Code, "Получили в ответ не тот код")
@@ -109,7 +106,6 @@ func TestUsersRoutes(t *testing.T) {
 			}`
 			req, _ := http.NewRequest("POST", "/users", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authorization", "Basic YWRtaW46UGFzc3cwcmQ=")
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Получили в ответ не тот код")
@@ -603,7 +599,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			}`
 			req, _ := http.NewRequest("POST", "/users/1/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authorization", "Basic YWRtaW46UGFzc3cwcmQ=")
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, 201, w.Code, "Получили в ответ не тот код")
@@ -620,7 +615,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			</SensorToUserBinding>`
 			req, _ := http.NewRequest("POST", "/users/1/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/xml")
-			req.Header.Add("Authorization", "Basic YWRtaW46UGFzc3cwcmQ=")
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, 415, w.Code, "Получили в ответ не тот код")
@@ -635,7 +629,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			body := `{ невалидный json }`
 			req, _ := http.NewRequest("POST", "/users/1/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authorization", "Basic YWRtaW46UGFzc3cwcmQ=")
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, 400, w.Code, "Получили в ответ не тот код")
@@ -652,7 +645,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			}`
 			req, _ := http.NewRequest("POST", "/users/2/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authorization", "Basic YWRtaW46UGFzc3cwcmQ=")
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusNotFound, w.Code, "Получили в ответ не тот код")
@@ -669,7 +661,6 @@ func TestUsersSensorsRoutes(t *testing.T) {
 			}`
 			req, _ := http.NewRequest("POST", "/users/1/sensors", bytes.NewReader([]byte(body)))
 			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authorization", "Basic YWRtaW46UGFzc3cwcmQ=")
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, 422, w.Code, "Получили в ответ не тот код")
