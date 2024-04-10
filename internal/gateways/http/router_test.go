@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"homework/internal/usecase"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,7 +15,6 @@ import (
 	eventRepository "homework/internal/repository/event/inmemory"
 	sensorRepository "homework/internal/repository/sensor/inmemory"
 	userRepository "homework/internal/repository/user/inmemory"
-	"homework/internal/usecase"
 )
 
 var (

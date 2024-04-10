@@ -15,8 +15,15 @@ func NewUser(ur UserRepository, sor SensorOwnerRepository, sr SensorRepository) 
 	return &User{UserRepo: ur, SensorOwnerRepo: sor, SensorRepo: sr}
 }
 
+func ValidateUser(u *domain.User) error {
+	if u.Name == "" {
+		return ErrInvalidUserName
+	}
+	return nil
+}
+
 func (u *User) RegisterUser(ctx context.Context, user *domain.User) (*domain.User, error) {
-	if err := user.Validate(); err != nil {
+	if err := ValidateUser(user); err != nil {
 		return nil, err
 	}
 

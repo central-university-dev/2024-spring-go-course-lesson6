@@ -15,8 +15,15 @@ func NewEvent(er EventRepository, sr SensorRepository) *Event {
 	return &Event{EventRepo: er, SensorRepo: sr}
 }
 
+func ValidateEvent(e *domain.Event) error {
+	if e.Timestamp.IsZero() {
+		return ErrInvalidEventTimestamp
+	}
+	return nil
+}
+
 func (e *Event) ReceiveEvent(ctx context.Context, event *domain.Event) error {
-	if err := event.Validate(); err != nil {
+	if err := ValidateEvent(event); err != nil {
 		return err
 	}
 
