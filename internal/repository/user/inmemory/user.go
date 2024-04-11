@@ -2,24 +2,18 @@ package inmemory
 
 import (
 	"context"
-	"errors"
 	"homework/internal/domain"
-	"math/rand"
+	"homework/internal/usecase"
 	"sync"
-)
-
-var (
-	ErrUserNil      = errors.New("user is nil")
-	ErrUserNotFound = errors.New("user not found")
 )
 
 type UserRepository struct {
 	mu          sync.RWMutex
-	UserStorage map[int64]domain.User
+	UserStorage []domain.User
 }
 
 func NewUserRepository() *UserRepository {
-	return &UserRepository{UserStorage: make(map[int64]domain.User)}
+	return &UserRepository{UserStorage: make([]domain.User, 0)}
 }
 
 func (r *UserRepository) SaveUser(ctx context.Context, user *domain.User) error {
@@ -27,12 +21,11 @@ func (r *UserRepository) SaveUser(ctx context.Context, user *domain.User) error 
 		return ctx.Err()
 	}
 	if user == nil {
-		return ErrUserNil
+		return usecase.ErrUserNotFound
 	}
 
-	user.ID = rand.Int63()
 	r.mu.Lock()
-	r.UserStorage[user.ID] = *user
+	r.UserStorage = append(r.UserStorage, *user)
 	r.mu.Unlock()
 	return nil
 }
@@ -43,9 +36,11 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (*domain.Use
 	}
 
 	r.mu.RLock()
-	if usr, ok := r.UserStorage[id]; ok {
-		return &usr, nil
+	for _, usr := range r.UserStorage {
+		if usr.ID == id {
+			return &usr, nil
+		}
 	}
-	r.mu.Unlock()
-	return nil, ErrUserNotFound
+	r.mu.RUnlock()
+	return nil, usecase.ErrUserNotFound
 }

@@ -14,7 +14,7 @@ func NewSensor(sr SensorRepository) *Sensor {
 	return &Sensor{SensorRepo: sr}
 }
 
-func ValidateSensor(s *domain.Sensor) error {
+func validateSensor(s *domain.Sensor) error {
 	if s.Type != domain.SensorTypeContactClosure && s.Type != domain.SensorTypeADC {
 		return ErrWrongSensorType
 	} else if len(s.SerialNumber) != 10 {
@@ -24,7 +24,7 @@ func ValidateSensor(s *domain.Sensor) error {
 }
 
 func (s *Sensor) RegisterSensor(ctx context.Context, sensor *domain.Sensor) (*domain.Sensor, error) {
-	if err := ValidateSensor(sensor); err != nil {
+	if err := validateSensor(sensor); err != nil {
 		return nil, err
 	}
 

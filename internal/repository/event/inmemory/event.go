@@ -2,14 +2,9 @@ package inmemory
 
 import (
 	"context"
-	"errors"
 	"homework/internal/domain"
+	"homework/internal/usecase"
 	"sync"
-)
-
-var (
-	ErrEventNotFound = errors.New("event not found")
-	ErrEventNil      = errors.New("event is nil")
 )
 
 type EventRepository struct {
@@ -26,7 +21,7 @@ func (r *EventRepository) SaveEvent(ctx context.Context, event *domain.Event) er
 		return ctx.Err()
 	}
 	if event == nil {
-		return ErrEventNil
+		return usecase.ErrEventNotFound
 	}
 
 	r.mu.Lock()
@@ -55,5 +50,5 @@ func (r *EventRepository) GetLastEventBySensorID(ctx context.Context, id int64) 
 		}
 		return &lstEvent, nil
 	}
-	return nil, ErrEventNotFound
+	return nil, usecase.ErrEventNotFound
 }

@@ -2,40 +2,34 @@ package inmemory
 
 import (
 	"context"
-	"errors"
 	"homework/internal/domain"
-	"math/rand"
+	"homework/internal/usecase"
 	"sync"
 	"time"
 )
 
-var (
-	ErrSensorNil      = errors.New("sensor is nil")
-	ErrSensorNotFound = errors.New("sensor not found")
-)
-
 type SensorRepository struct {
 	mu            sync.RWMutex
-	SensorStorage map[int64]domain.Sensor
+	SensorStorage []domain.Sensor
 }
 
 func NewSensorRepository() *SensorRepository {
-	return &SensorRepository{SensorStorage: make(map[int64]domain.Sensor)}
+	return &SensorRepository{SensorStorage: make([]domain.Sensor, 0)}
 }
 
 func (r *SensorRepository) SaveSensor(ctx context.Context, sensor *domain.Sensor) error {
-	now := time.Now()
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
 	if sensor == nil {
-		return ErrSensorNil
+		return usecase.ErrSensorNotFound
 	}
 
-	sensor.RegisteredAt = now
-	sensor.ID = rand.Int63()
+	sensor.RegisteredAt = time.Now()
+	sensor.ID = 1
+
 	r.mu.Lock()
-	r.SensorStorage[sensor.ID] = *sensor
+	r.SensorStorage = append(r.SensorStorage, *sensor)
 	r.mu.Unlock()
 
 	return nil
@@ -64,11 +58,13 @@ func (r *SensorRepository) GetSensorByID(ctx context.Context, id int64) (*domain
 	}
 
 	r.mu.RLock()
-	if s, ok := (r.SensorStorage)[id]; ok {
-		return &s, nil
+	defer r.mu.RUnlock()
+	for _, s := range r.SensorStorage {
+		if s.ID == id {
+			return &s, nil
+		}
 	}
-	r.mu.RUnlock()
-	return nil, ErrSensorNotFound
+	return nil, usecase.ErrSensorNotFound
 }
 
 func (r *SensorRepository) GetSensorBySerialNumber(ctx context.Context, sn string) (*domain.Sensor, error) {
@@ -77,11 +73,11 @@ func (r *SensorRepository) GetSensorBySerialNumber(ctx context.Context, sn strin
 	}
 
 	r.mu.RLock()
+	defer r.mu.RUnlock()
 	for _, s := range r.SensorStorage {
 		if s.SerialNumber == sn {
 			return &s, nil
 		}
 	}
-	r.mu.RUnlock()
-	return nil, ErrSensorNotFound
+	return nil, usecase.ErrSensorNotFound
 }

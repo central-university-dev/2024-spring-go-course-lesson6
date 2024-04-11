@@ -15,7 +15,7 @@ func NewUser(ur UserRepository, sor SensorOwnerRepository, sr SensorRepository) 
 	return &User{UserRepo: ur, SensorOwnerRepo: sor, SensorRepo: sr}
 }
 
-func ValidateUser(u *domain.User) error {
+func validateUser(u *domain.User) error {
 	if u.Name == "" {
 		return ErrInvalidUserName
 	}
@@ -23,7 +23,7 @@ func ValidateUser(u *domain.User) error {
 }
 
 func (u *User) RegisterUser(ctx context.Context, user *domain.User) (*domain.User, error) {
-	if err := ValidateUser(user); err != nil {
+	if err := validateUser(user); err != nil {
 		return nil, err
 	}
 
@@ -34,8 +34,7 @@ func (u *User) RegisterUser(ctx context.Context, user *domain.User) (*domain.Use
 }
 
 func (u *User) AttachSensorToUser(ctx context.Context, userID, sensorID int64) error {
-	user, err := u.UserRepo.GetUserByID(ctx, userID)
-	if err != nil {
+	if _, err := u.UserRepo.GetUserByID(ctx, userID); err != nil {
 		return err
 	}
 
@@ -44,7 +43,19 @@ func (u *User) AttachSensorToUser(ctx context.Context, userID, sensorID int64) e
 		return err
 	}
 
-	return u.SensorOwnerRepo.SaveSensorOwner(ctx, domain.SensorOwner{UserID: user.ID, SensorID: sensor.ID})
+	return u.SensorOwnerRepo.SaveSensorOwner(ctx, domain.SensorOwner{UserID: userID, SensorID: sensor.ID})
+}
+
+func (u *User) CreateSensorToUser(ctx context.Context, userID int64, sensor *domain.Sensor) error {
+	if err := u.SensorRepo.SaveSensor(ctx, sensor); err != nil {
+		return err
+	}
+
+	if _, err := u.UserRepo.GetUserByID(ctx, userID); err != nil {
+		return err
+	}
+
+	return u.SensorOwnerRepo.SaveSensorOwner(ctx, domain.SensorOwner{UserID: userID, SensorID: sensor.ID})
 }
 
 func (u *User) GetUserSensors(ctx context.Context, userID int64) ([]domain.Sensor, error) {
