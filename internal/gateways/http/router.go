@@ -2,13 +2,14 @@ package http
 
 import (
 	"homework/internal/domain"
-	"homework/internal/dto"
-	"homework/internal/validate"
+	"homework/internal/dto/models"
 	"net/http"
 	"strconv"
+	"time"
 	"unsafe"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-openapi/strfmt"
 )
 
 func setupRouter(r *gin.Engine, uc UseCases) {
@@ -37,7 +38,7 @@ func setupRouter(r *gin.Engine, uc UseCases) {
 
 	r.GET("/users/:userId/sensors", SetupGetSensorsByUserId(uc))
 	r.HEAD("/users/:userId/sensors", SetupHeadGetSensorsByUserId(uc))
-	r.POST("/users/:userId/sensors", SetupCreateSensorByUserId(uc))
+	r.POST("/users/:userId/sensors", SetupAttachSensorByUserId(uc))
 	r.OPTIONS("/users/:userId/sensors", func(ctx *gin.Context) {
 		ctx.Header("Allow", "OPTIONS,POST,GET,HEAD")
 		ctx.AbortWithStatus(http.StatusNoContent)
@@ -66,17 +67,17 @@ func SetupCreateUser(uc UseCases) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		checkRequestHeader(ctx)
 
-		userDto := dto.User{}
+		userDto := models.UserToCreate{}
 		if err := ctx.BindJSON(&userDto); err != nil {
 			ctx.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		userDto.InitData()
-		if err := validate.Validate(userDto); err != nil {
+		if err := userDto.Validate(strfmt.Default); err != nil {
 			ctx.AbortWithStatus(http.StatusUnprocessableEntity)
 			return
 		}
-		user := domain.User{ID: userDto.ID, Name: userDto.Name}
+
+		user := domain.User{ID: 1, Name: *userDto.Name}
 
 		if _, err := uc.User.RegisterUser(ctx, &user); err != nil {
 			ctx.AbortWithStatus(http.StatusConflict)
@@ -86,24 +87,28 @@ func SetupCreateUser(uc UseCases) gin.HandlerFunc {
 	}
 }
 
-func getSensors(ctx *gin.Context, uc *UseCases) ([]dto.Sensor, int) {
+func getSensors(ctx *gin.Context, uc *UseCases) ([]models.Sensor, int) {
 	sensors, err := uc.Sensor.GetSensors(ctx)
 	if err != nil {
 		return nil, http.StatusBadRequest
 	}
 
-	sensorsDto := make([]dto.Sensor, len(sensors))
+	sensorsDto := make([]models.Sensor, len(sensors))
 	for i, s := range sensors {
 		sensor := s
-		sensorsDto[i] = dto.Sensor{
+		strType := string(sensor.Type)
+		strReg := strfmt.DateTime(sensor.RegisteredAt)
+		strLAct := strfmt.DateTime(sensor.LastActivity)
+
+		sensorsDto[i] = models.Sensor{
 			ID:           &sensor.ID,
 			SerialNumber: &sensor.SerialNumber,
-			Type:         sensor.Type,
-			CurrentState: sensor.CurrentState,
-			Description:  sensor.Description,
-			IsActive:     sensor.IsActive,
-			RegisteredAt: sensor.RegisteredAt,
-			LastActivity: sensor.LastActivity,
+			Type:         &strType,
+			CurrentState: &sensor.CurrentState,
+			Description:  &sensor.Description,
+			IsActive:     &sensor.IsActive,
+			RegisteredAt: &strReg,
+			LastActivity: &strLAct,
 		}
 	}
 	return sensorsDto, http.StatusOK
@@ -135,18 +140,19 @@ func SetupCreateSensor(uc UseCases) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		checkRequestHeader(ctx)
 
-		sensorDto := dto.Sensor{}
+		sensorDto := models.SensorToCreate{}
 		if err := ctx.BindJSON(&sensorDto); err != nil {
 			ctx.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		sensorDto.InitData()
-		if err := validate.Validate(sensorDto); err != nil {
+		if err := sensorDto.Validate(strfmt.Default); err != nil {
 			ctx.AbortWithStatus(http.StatusUnprocessableEntity)
 			return
 		}
 
-		sensor := domain.Sensor{ID: *sensorDto.ID, SerialNumber: *sensorDto.SerialNumber, Type: sensorDto.Type, CurrentState: sensorDto.CurrentState, Description: sensorDto.Description, IsActive: sensorDto.IsActive, RegisteredAt: sensorDto.RegisteredAt, LastActivity: sensorDto.LastActivity}
+		tp := domain.SensorType(*sensorDto.Type)
+		sensor := domain.Sensor{ID: 1, SerialNumber: *sensorDto.SerialNumber, Type: tp, CurrentState: 0, Description: *sensorDto.Description, IsActive: *sensorDto.IsActive, RegisteredAt: time.Now(), LastActivity: time.Now()}
+
 		if _, err := uc.Sensor.RegisterSensor(ctx, &sensor); err != nil {
 			ctx.AbortWithStatus(http.StatusConflict)
 			return
@@ -155,18 +161,34 @@ func SetupCreateSensor(uc UseCases) gin.HandlerFunc {
 	}
 }
 
-func getSensorById(ctx *gin.Context, uc *UseCases) (*dto.Sensor, int) {
+func getSensorById(ctx *gin.Context, uc *UseCases) (*models.Sensor, int) {
 	sensorId, err := strconv.ParseInt(ctx.Param("sensorId"), 10, 64)
 	if err != nil {
 		return nil, http.StatusUnprocessableEntity
 	}
+	sensorBindUser := models.SensorToUserBinding{SensorID: &sensorId}
+	if err := sensorBindUser.Validate(strfmt.Default); err != nil {
+		return nil, http.StatusUnprocessableEntity
+	}
 
-	sensor, err := uc.Sensor.GetSensorByID(ctx, sensorId)
+	sensor, err := uc.Sensor.GetSensorByID(ctx, *sensorBindUser.SensorID)
 	if err != nil {
 		return nil, http.StatusNotFound
 	}
 
-	sensorDto := dto.Sensor{ID: &sensor.ID, SerialNumber: &sensor.SerialNumber, Type: sensor.Type, CurrentState: sensor.CurrentState, Description: sensor.Description, IsActive: sensor.IsActive, RegisteredAt: sensor.RegisteredAt, LastActivity: sensor.LastActivity}
+	strType := string(sensor.Type)
+	strReg := strfmt.DateTime(sensor.RegisteredAt)
+	strLAct := strfmt.DateTime(sensor.LastActivity)
+	sensorDto := models.Sensor{
+		ID:           &sensor.ID,
+		SerialNumber: &sensor.SerialNumber,
+		Type:         &strType,
+		CurrentState: &sensor.CurrentState,
+		Description:  &sensor.Description,
+		IsActive:     &sensor.IsActive,
+		RegisteredAt: &strReg,
+		LastActivity: &strLAct,
+	}
 	return &sensorDto, http.StatusOK
 }
 
@@ -194,29 +216,37 @@ func SetupHeadGetSensorById(uc UseCases) gin.HandlerFunc {
 	}
 }
 
-func getSensorsByUserId(ctx *gin.Context, uc *UseCases) ([]dto.Sensor, int) {
+func getSensorsByUserId(ctx *gin.Context, uc *UseCases) ([]models.Sensor, int) {
 	userId, err := strconv.ParseInt(ctx.Param("userId"), 10, 64)
 	if err != nil {
 		return nil, http.StatusUnprocessableEntity
 	}
+	sensorBindUser := models.SensorToUserBinding{SensorID: &userId}
+	if err := sensorBindUser.Validate(strfmt.Default); err != nil {
+		return nil, http.StatusUnprocessableEntity
+	}
 
-	sensors, err := uc.User.GetUserSensors(ctx, userId)
+	sensors, err := uc.User.GetUserSensors(ctx, *sensorBindUser.SensorID)
 	if err != nil {
 		return nil, http.StatusNotFound
 	}
 
-	sensorsDto := make([]dto.Sensor, len(sensors))
+	sensorsDto := make([]models.Sensor, len(sensors))
 	for i, s := range sensors {
 		sensor := s
-		sensorsDto[i] = dto.Sensor{
+		strType := string(sensor.Type)
+		strReg := strfmt.DateTime(sensor.RegisteredAt)
+		strLAct := strfmt.DateTime(sensor.LastActivity)
+
+		sensorsDto[i] = models.Sensor{
 			ID:           &sensor.ID,
 			SerialNumber: &sensor.SerialNumber,
-			Type:         sensor.Type,
-			CurrentState: sensor.CurrentState,
-			Description:  sensor.Description,
-			IsActive:     sensor.IsActive,
-			RegisteredAt: sensor.RegisteredAt,
-			LastActivity: sensor.LastActivity,
+			Type:         &strType,
+			CurrentState: &sensor.CurrentState,
+			Description:  &sensor.Description,
+			IsActive:     &sensor.IsActive,
+			RegisteredAt: &strReg,
+			LastActivity: &strLAct,
 		}
 	}
 
@@ -247,7 +277,7 @@ func SetupHeadGetSensorsByUserId(uc UseCases) gin.HandlerFunc {
 	}
 }
 
-func SetupCreateSensorByUserId(uc UseCases) gin.HandlerFunc {
+func SetupAttachSensorByUserId(uc UseCases) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		checkRequestHeader(ctx)
 
@@ -257,19 +287,17 @@ func SetupCreateSensorByUserId(uc UseCases) gin.HandlerFunc {
 			return
 		}
 
-		sensorDto := dto.Sensor{}
-		if err := ctx.BindJSON(&sensorDto); err != nil {
+		sensorUserBindDto := models.SensorToUserBinding{}
+		if err := ctx.BindJSON(&sensorUserBindDto); err != nil {
 			ctx.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		sensorDto.InitData()
-		if err := validate.Validate(sensorDto); err != nil {
+		if err := sensorUserBindDto.Validate(strfmt.Default); err != nil {
 			ctx.AbortWithStatus(http.StatusUnprocessableEntity)
 			return
 		}
-		sensor := domain.Sensor{ID: *sensorDto.ID, SerialNumber: *sensorDto.SerialNumber, Type: sensorDto.Type, CurrentState: sensorDto.CurrentState, Description: sensorDto.Description, IsActive: sensorDto.IsActive, RegisteredAt: sensorDto.RegisteredAt, LastActivity: sensorDto.LastActivity}
 
-		if err := uc.User.CreateSensorToUser(ctx, userId, &sensor); err != nil {
+		if err := uc.User.AttachSensorToUser(ctx, userId, *sensorUserBindDto.SensorID); err != nil {
 			ctx.AbortWithStatus(http.StatusNotFound)
 			return
 		}
@@ -281,19 +309,18 @@ func SetupCreateEvent(uc UseCases) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		checkRequestHeader(ctx)
 
-		eventDto := dto.Event{}
+		eventDto := models.SensorEvent{}
 		if err := ctx.BindJSON(&eventDto); err != nil {
 			ctx.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		eventDto.InitData()
-		if err := validate.Validate(eventDto); err != nil {
+		if err := eventDto.Validate(strfmt.Default); err != nil {
 			ctx.AbortWithStatus(http.StatusUnprocessableEntity)
 			return
 		}
-		event := domain.Event{Timestamp: eventDto.Timestamp, SensorSerialNumber: eventDto.SensorSerialNumber, SensorID: eventDto.SensorID, Payload: eventDto.Payload}
 
-		if err := uc.Event.EventRepo.SaveEvent(ctx, &event); err != nil {
+		event := domain.Event{Timestamp: time.Now(), SensorSerialNumber: *eventDto.SensorSerialNumber, SensorID: 1, Payload: *eventDto.Payload}
+		if err := uc.Event.ReceiveEvent(ctx, &event); err != nil {
 			ctx.AbortWithStatus(http.StatusConflict)
 			return
 		}
