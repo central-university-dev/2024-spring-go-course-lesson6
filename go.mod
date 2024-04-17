@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang/mock v1.6.0
 	github.com/stretchr/testify v1.9.0
+	nhooyr.io/websocket v1.8.11
 )
 
 require (
